@@ -17,7 +17,7 @@ namespace FoxSoftware.DataExplorer.Sql
 			string commandScript = BuildGetRowCommandScript(tableName, primaryKeyValues);
 
 			var command = new SqlCommand(commandScript);
-			command.Parameters.AddWithValue(primaryKeyValues);
+			command.Parameters.AddWithValueNullSecured(primaryKeyValues);
 
 			return command;
 		}
@@ -27,7 +27,7 @@ namespace FoxSoftware.DataExplorer.Sql
 			string script = BuildAddRowCommandScript(tableName, row);
 
 			var command = new SqlCommand(script);
-			command.Parameters.AddWithValue(row);
+			command.Parameters.AddWithValueNullSecured(row);
 
 			return command;
 		}
@@ -36,7 +36,7 @@ namespace FoxSoftware.DataExplorer.Sql
 			string script = BuildAddRowsCommandScript(tableName, columns, values.GetLength(0));
 
 			var command = new SqlCommand(script);
-			command.Parameters.AddWithValue(columns, values);
+			command.Parameters.AddWithValueNullSecured(columns, values);
 
 			return command;
 		}
@@ -56,26 +56,26 @@ namespace FoxSoftware.DataExplorer.Sql
 		{
 			if (skip.HasValue || take.HasValue)
 			{
-				command.Parameters.AddWithValue("@skip", skip ?? 0);
+				command.Parameters.AddWithValueNullSecured("@skip", skip ?? 0);
 			}
 
 			if (take.HasValue)
 			{
-				command.Parameters.AddWithValue("@take", take.Value);
+				command.Parameters.AddWithValueNullSecured("@take", take.Value);
 			}
 
 			var splited = conditions
 				.Select((x, i) => new { i, x.Value, x.Condition })
 				.ToLookup(x => x.Condition == Condition.In);
 
-			command.Parameters.AddWithValue(
+			command.Parameters.AddWithValueNullSecured(
 				splited[true].SelectMany(conditionData =>
 				{
 					var array = ObjectToEnumerable(conditionData.Value);
 					return array.Select((x, i) => new { param = $"value{conditionData.i}_{i}", value = x });
 				}).ToDictionary(x => x.param, x => x.value)
 			);
-			command.Parameters.AddWithValue(
+			command.Parameters.AddWithValueNullSecured(
 				splited[false].ToDictionary((x) => $"value{x.i}", (x) => x.Value)
 			);
 		}
